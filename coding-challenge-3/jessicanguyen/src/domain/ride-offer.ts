@@ -2,7 +2,8 @@ export type RideOfferStatus =
     | "PENDING"
     | "ACCEPTED"
     | "REJECTED"
-    | "EXPIRED";
+    | "EXPIRED"
+    | "CANCELLED";
 
 export class RideOffer {
     constructor(

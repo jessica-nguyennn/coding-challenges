@@ -11,4 +11,6 @@ export class InMemoryRideRepository implements RideRepository {
     findById(rideId: string): Ride | undefined {
         return this.rides.get(rideId);
     }
+
+
 }

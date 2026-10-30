@@ -38,4 +38,21 @@ describe("Driver availability", () => {
             expect(driver.status).toBe(status);
         }
     );
+
+    it("should transition from OFFERED to BUSY when accepting a ride", () => {
+        const driver = new Driver("D001", null, "OFFERED");
+
+        driver.acceptRide();
+
+        expect(driver.status).toBe("BUSY");
+    });
+
+    it("should not accept a ride when the driver has no pending offer", () => {
+        const driver = new Driver("D001", null, "AVAILABLE");
+
+        expect(() => driver.acceptRide())
+            .toThrow("Only drivers with a pending offer can accept");
+
+        expect(driver.status).toBe("AVAILABLE");
+    });
 });

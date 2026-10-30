@@ -20,6 +20,8 @@ describe("CreateRideOfferService", () => {
     };
 
     let rideOfferRepository: {
+        findById: ReturnType<typeof vi.fn<(offerId: string) => RideOffer | undefined>>;
+        findByRideId: ReturnType<typeof vi.fn<(rideId: string) => RideOffer[]>>;
         save: ReturnType<typeof vi.fn<(offer: RideOffer) => void>>;
     };
     beforeEach(() => {
@@ -51,6 +53,8 @@ describe("CreateRideOfferService", () => {
         };
 
         rideOfferRepository = {
+            findById: vi.fn<(offerId: string) => RideOffer | undefined>(),
+            findByRideId: vi.fn<(rideId: string) => RideOffer[]>(),
             save: vi.fn<(offer: RideOffer) => void>()
         };
     });
@@ -71,5 +75,47 @@ describe("CreateRideOfferService", () => {
         expect(rideRepository.save).toHaveBeenCalledWith(ride);
         expect(driverRepository.save).toHaveBeenCalledWith(driver);
         expect(rideOfferRepository.save).toHaveBeenCalledWith(offer);
+    });
+
+    it("should reject an offer when the driver is not available", () => {
+        driver.setAvailability("OFFLINE");
+
+        const service = new CreateRideOfferService(
+            rideRepository,
+            driverRepository,
+            rideOfferRepository
+        );
+
+        expect(() => service.execute("R001", "D001"))
+            .toThrow("Driver is not available");
+
+        expect(ride.status).toBe("MATCHING");
+        expect(ride.assignedDriverId).toBeNull();
+        expect(driver.status).toBe("OFFLINE");
+
+        expect(rideRepository.save).not.toHaveBeenCalled();
+        expect(driverRepository.save).not.toHaveBeenCalled();
+        expect(rideOfferRepository.save).not.toHaveBeenCalled();
+    });
+
+    it("should reject an offer when the ride is not matching", () => {
+        ride.status = "DRIVER_ASSIGNED";
+        ride.assignedDriverId = "D002";
+
+        const service = new CreateRideOfferService(
+            rideRepository,
+            driverRepository,
+            rideOfferRepository
+        );
+
+        expect(() => service.execute("R001", "D001"))
+            .toThrow("Ride is not matching");
+
+        expect(driver.status).toBe("AVAILABLE");
+        expect(ride.assignedDriverId).toBe("D002");
+
+        expect(rideRepository.save).not.toHaveBeenCalled();
+        expect(driverRepository.save).not.toHaveBeenCalled();
+        expect(rideOfferRepository.save).not.toHaveBeenCalled();
     });
 });
