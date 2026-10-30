@@ -4,6 +4,7 @@ import { InMemoryPassengerRepository } from "./infrastructure/persistence/in-mem
 import { InMemoryRideRepository } from "./infrastructure/persistence/in-memory-ride-repository.js";
 import { InMemoryDriverRepository } from "./infrastructure/persistence/in-memory-driver-repository.js";
 import { UpdateDriverAvailabilityService } from "./application/update-driver-availability.js";
+import { UpdateDriverLocationService } from "./application/update-driver-location.js";
 import { createDriverRouter } from "./routes/drivers.js";
 import { createRideRouter } from "./routes/rides.js";
 
@@ -22,7 +23,8 @@ const createRideService = new CreateRideService(
 
 app.use("/rides", createRideRouter(createRideService));
 app.use("/drivers", createDriverRouter(
-    new UpdateDriverAvailabilityService(driverRepository)
+    new UpdateDriverAvailabilityService(driverRepository),
+    new UpdateDriverLocationService(driverRepository)
 ));
 
 export default app;

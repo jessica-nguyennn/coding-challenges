@@ -1,3 +1,5 @@
+import type { Location } from "./shared/location.js";
+
 export type DriverStatus = "OFFLINE" | "AVAILABLE" | "OFFERED" | "BUSY";
 export type DriverAvailability = Extract<DriverStatus, "OFFLINE" | "AVAILABLE">;
 
@@ -6,9 +8,8 @@ export class Driver {
 
     constructor(
         public readonly id: string,
-        status: DriverStatus = "OFFLINE",
-        public latitude = 0,
-        public longitude = 0
+        public location: Location | null = null,
+        status: DriverStatus = "OFFLINE"
     ) {
         this.currentStatus = status;
     }
