@@ -10,6 +10,10 @@ export class InMemoryDriverRepository implements DriverRepository {
         return this.drivers.get(driverId);
     }
 
+    findAll(): Driver[] {
+        return [...this.drivers.values()];
+    }
+
     save(driver: Driver): void {
         this.drivers.set(driver.id, driver);
     }
