@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { CreateRideOfferService } from "../../src/application/create-ride-offer.js";
+import { ExpireRideOfferService } from "../../src/application/expire-ride-offer.js";
 import { DispatchRideService } from "../../src/application/dispatch-ride.js";
 import { MatchDriverService } from "../../src/application/match-driver.js";
+import { RespondToRideOfferService } from "../../src/application/respond-to-ride-offer.js";
 import { Driver } from "../../src/domain/driver.js";
 import { Location } from "../../src/domain/shared/location.js";
 import { Ride } from "../../src/domain/ride.js";
@@ -28,19 +30,35 @@ function setup() {
         driverRepository,
         rideOfferRepository
     );
+    const expireRideOfferService = new ExpireRideOfferService(
+        rideRepository,
+        driverRepository,
+        rideOfferRepository
+    );
     const service = new DispatchRideService(
         rideRepository,
         rideOfferRepository,
         matchDriverService,
-        createRideOfferService
+        createRideOfferService,
+        expireRideOfferService
+    );
+    const respondToRideOfferService = new RespondToRideOfferService(
+        rideRepository,
+        driverRepository,
+        rideOfferRepository,
+        service,
+        expireRideOfferService
     );
 
     return {
         service,
+        respondToRideOfferService,
         ride,
         rideRepository,
         driverRepository,
-        rideOfferRepository
+        rideOfferRepository,
+        expireRideOfferService,
+        createRideOfferService
     };
 }
 
@@ -111,5 +129,66 @@ describe("DispatchRideService", () => {
         const context = setup();
 
         expect(() => context.service.execute("unknown")).toThrow("Ride does not exist");
+    });
+
+    it("automatically offers the next driver after the current driver rejects", () => {
+        const context = setup();
+        const firstDriver = availableDriver("D001", 10.777, 106.701);
+        const secondDriver = availableDriver("D002", 10.78, 106.705);
+        context.driverRepository.save(firstDriver);
+        context.driverRepository.save(secondDriver);
+
+        const firstOffer = context.service.execute("R001");
+        expect(firstOffer?.driverId).toBe("D001");
+
+        const rejected = context.respondToRideOfferService.reject(
+            "R001",
+            firstOffer!.id,
+            "D001"
+        );
+
+        expect(rejected.status).toBe("REJECTED");
+        expect(context.ride.status).toBe("DRIVER_ASSIGNED");
+        expect(context.ride.assignedDriverId).toBe("D002");
+        expect(firstDriver.status).toBe("AVAILABLE");
+        expect(secondDriver.status).toBe("OFFERED");
+        expect(context.rideOfferRepository.findByRideId("R001")).toHaveLength(2);
+    });
+
+    it("keeps the ride in matching when all previously offered drivers are excluded", () => {
+        const context = setup();
+        const onlyDriver = availableDriver("D001", 10.777, 106.701);
+        context.driverRepository.save(onlyDriver);
+
+        const firstOffer = context.service.execute("R001");
+        context.respondToRideOfferService.reject("R001", firstOffer!.id, "D001");
+
+        expect(context.ride.status).toBe("MATCHING");
+        expect(context.ride.assignedDriverId).toBeNull();
+        expect(onlyDriver.status).toBe("AVAILABLE");
+        expect(context.rideOfferRepository.findByRideId("R001")).toHaveLength(1);
+    });
+
+    it("expires a pending offer, releases its driver, and dispatches the next driver", () => {
+        const context = setup();
+        const firstDriver = availableDriver("D001", 10.777, 106.701);
+        const secondDriver = availableDriver("D002", 10.78, 106.705);
+        context.driverRepository.save(firstDriver);
+        context.driverRepository.save(secondDriver);
+
+        const firstOffer = context.service.execute("R001");
+        const expired = context.expireRideOfferService.execute(
+            "R001",
+            firstOffer!.id,
+            new Date(firstOffer!.expiresAt.getTime())
+        );
+        expect(expired).toBe(true);
+
+        const nextOffer = context.service.execute("R001");
+
+        expect(firstOffer?.status).toBe("EXPIRED");
+        expect(firstDriver.status).toBe("AVAILABLE");
+        expect(nextOffer?.driverId).toBe("D002");
+        expect(context.ride.status).toBe("DRIVER_ASSIGNED");
     });
 });

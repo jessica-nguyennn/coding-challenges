@@ -3,6 +3,7 @@ import type { RideOffer } from "../domain/ride-offer.js";
 import type { RideOfferRepository } from "./ports/ride-offer-repository.js";
 import type { RideRepository } from "./ports/ride-repository.js";
 import { CreateRideOfferService } from "./create-ride-offer.js";
+import { ExpireRideOfferService } from "./expire-ride-offer.js";
 import { MatchDriverService } from "./match-driver.js";
 
 export class DispatchRideService {
@@ -10,7 +11,8 @@ export class DispatchRideService {
         private readonly rideRepository: Pick<RideRepository, "findById" | "save">,
         private readonly rideOfferRepository: Pick<RideOfferRepository, "findByRideId">,
         private readonly matchDriverService: MatchDriverService,
-        private readonly createRideOfferService: CreateRideOfferService
+        private readonly createRideOfferService: CreateRideOfferService,
+        private readonly expireRideOfferService: ExpireRideOfferService
     ) {}
 
     execute(rideId: string): RideOffer | null {
@@ -23,7 +25,13 @@ export class DispatchRideService {
             const pendingOffer = this.rideOfferRepository.findByRideId(rideId)
                 .find((offer) => offer.status === "PENDING");
             if (pendingOffer) {
-                return pendingOffer;
+                const expired = this.expireRideOfferService.execute(
+                    rideId,
+                    pendingOffer.id
+                );
+                if (!expired) {
+                    return pendingOffer;
+                }
             }
         }
 

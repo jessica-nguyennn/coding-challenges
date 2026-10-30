@@ -11,6 +11,12 @@ import type { RideOfferRepository } from "./ports/ride-offer-repository.js";
 const DEFAULT_RESPONSE_TIMEOUT_MS = 30_000;
 
 export class CreateRideOfferService {
+    private expirationHandler?: (
+        rideId: string,
+        offerId: string,
+        expiresAt: Date
+    ) => void;
+
     constructor(
         private readonly rideRepository: Pick<
             RideRepository,
@@ -29,6 +35,12 @@ export class CreateRideOfferService {
         ) {
             throw new Error("Response timeout must be a positive finite number");
         }
+    }
+
+    setExpirationHandler(
+        handler: (rideId: string, offerId: string, expiresAt: Date) => void
+    ): void {
+        this.expirationHandler = handler;
     }
 
     execute(rideId: string, driverId: string): RideOffer {
@@ -68,6 +80,7 @@ export class CreateRideOfferService {
         this.driverRepository.save(driver);
         this.rideRepository.save(ride);
         this.rideOfferRepository.save(offer);
+        this.expirationHandler?.(rideId, offer.id, offer.expiresAt);
 
         return offer;
     }

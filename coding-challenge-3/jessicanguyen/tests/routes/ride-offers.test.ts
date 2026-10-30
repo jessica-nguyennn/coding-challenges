@@ -4,6 +4,9 @@ import request from "supertest";
 import { CreateRideService } from "../../src/application/create-ride.js";
 import { CreateRideOfferService } from "../../src/application/create-ride-offer.js";
 import { DispatchRideService } from "../../src/application/dispatch-ride.js";
+import { CancelRideService } from "../../src/application/cancel-ride.js";
+import { CompleteRideService } from "../../src/application/complete-ride.js";
+import { ExpireRideOfferService } from "../../src/application/expire-ride-offer.js";
 import { MatchDriverService } from "../../src/application/match-driver.js";
 import { RespondToRideOfferService } from "../../src/application/respond-to-ride-offer.js";
 import { Driver } from "../../src/domain/driver.js";
@@ -41,16 +44,28 @@ describe("ride offer endpoints", () => {
 
         app = express();
         app.use(express.json());
+        const createOfferService = new CreateRideOfferService(rides, drivers, offers);
+        const expireOfferService = new ExpireRideOfferService(rides, drivers, offers);
+        const dispatchService = new DispatchRideService(
+            rides,
+            offers,
+            new MatchDriverService(drivers),
+            createOfferService,
+            expireOfferService
+        );
         app.use("/rides", createRideRouter(
             new CreateRideService({ exists: () => true }, rides),
-            new CreateRideOfferService(rides, drivers, offers),
-            new RespondToRideOfferService(rides, drivers, offers),
-            new DispatchRideService(
+            createOfferService,
+            new RespondToRideOfferService(
                 rides,
+                drivers,
                 offers,
-                new MatchDriverService(drivers),
-                new CreateRideOfferService(rides, drivers, offers)
-            )
+                dispatchService,
+                expireOfferService
+            ),
+            dispatchService,
+            new CancelRideService(rides, drivers, offers),
+            new CompleteRideService(rides, drivers)
         ));
     });
 
@@ -122,5 +137,40 @@ describe("ride offer endpoints", () => {
             .send({ driverId: "D002" });
 
         expect(response.status).toBe(403);
+    });
+
+    it("cancels a ride with a pending offer and releases its driver", async () => {
+        await request(app)
+            .post("/rides/R001/offers")
+            .send({ driverId: "D001" });
+
+        const response = await request(app).post("/rides/R001/cancel");
+
+        expect(response.status).toBe(204);
+        expect(rides.findById("R001")?.status).toBe("CANCELLED");
+        expect(drivers.findById("D001")?.status).toBe("AVAILABLE");
+        expect(offers.findByRideId("R001")[0]?.status).toBe("CANCELLED");
+    });
+
+    it("completes an accepted ride and releases its driver", async () => {
+        const created = await request(app)
+            .post("/rides/R001/offers")
+            .send({ driverId: "D001" });
+        await request(app)
+            .post(`/rides/R001/offers/${created.body.id}/accept`)
+            .send({ driverId: "D001" });
+
+        const response = await request(app).post("/rides/R001/complete");
+
+        expect(response.status).toBe(204);
+        expect(rides.findById("R001")?.status).toBe("COMPLETED");
+        expect(drivers.findById("D001")?.status).toBe("AVAILABLE");
+    });
+
+    it("rejects completing a ride that has not been accepted", async () => {
+        const response = await request(app).post("/rides/R001/complete");
+
+        expect(response.status).toBe(409);
+        expect(rides.findById("R001")?.status).toBe("MATCHING");
     });
 });

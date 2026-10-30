@@ -1,5 +1,8 @@
 import express from "express";
 import { CreateRideService } from "./application/create-ride.js";
+import { CancelRideService } from "./application/cancel-ride.js";
+import { CompleteRideService } from "./application/complete-ride.js";
+import { ExpireRideOfferService } from "./application/expire-ride-offer.js";
 import { InMemoryPassengerRepository } from "./infrastructure/persistence/in-memory-passenger-repository.js";
 import { InMemoryRideRepository } from "./infrastructure/persistence/in-memory-ride-repository.js";
 import { InMemoryDriverRepository } from "./infrastructure/persistence/in-memory-driver-repository.js";
@@ -31,18 +34,41 @@ const createRideOfferService = new CreateRideOfferService(
     driverRepository,
     rideOfferRepository
 );
+const expireRideOfferService = new ExpireRideOfferService(
+    rideRepository,
+    driverRepository,
+    rideOfferRepository
+);
 const dispatchRideService = new DispatchRideService(
     rideRepository,
     rideOfferRepository,
     new MatchDriverService(driverRepository),
-    createRideOfferService
+    createRideOfferService,
+    expireRideOfferService
+);
+createRideOfferService.setExpirationHandler((rideId, offerId, expiresAt) => {
+    const timer = setTimeout(() => {
+        if (expireRideOfferService.execute(rideId, offerId)) {
+            dispatchRideService.execute(rideId);
+        }
+    }, Math.max(0, expiresAt.getTime() - Date.now()));
+    timer.unref();
+});
+const respondToRideOfferService = new RespondToRideOfferService(
+    rideRepository,
+    driverRepository,
+    rideOfferRepository,
+    dispatchRideService,
+    expireRideOfferService
 );
 
 app.use("/rides", createRideRouter(
     createRideService,
     createRideOfferService,
-    new RespondToRideOfferService(rideRepository, driverRepository, rideOfferRepository),
-    dispatchRideService
+    respondToRideOfferService,
+    dispatchRideService,
+    new CancelRideService(rideRepository, driverRepository, rideOfferRepository),
+    new CompleteRideService(rideRepository, driverRepository)
 ));
 app.use("/drivers", createDriverRouter(
     new UpdateDriverAvailabilityService(driverRepository),

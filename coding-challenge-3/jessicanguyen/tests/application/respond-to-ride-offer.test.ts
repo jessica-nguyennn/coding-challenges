@@ -4,6 +4,7 @@ import { Driver } from "../../src/domain/driver.js";
 import { RideOffer } from "../../src/domain/ride-offer.js";
 import { Location } from "../../src/domain/shared/location.js";
 import { RespondToRideOfferService } from "../../src/application/respond-to-ride-offer.js";
+import { ExpireRideOfferService } from "../../src/application/expire-ride-offer.js";
 
 describe("RespondToRideOfferService", () => {
     let ride: Ride;
@@ -76,7 +77,13 @@ describe("RespondToRideOfferService", () => {
         const service = new RespondToRideOfferService(
             rideRepository,
             driverRepository,
-            rideOfferRepository
+            rideOfferRepository,
+            { execute: vi.fn() },
+            new ExpireRideOfferService(
+                rideRepository,
+                driverRepository,
+                rideOfferRepository
+            )
         );
 
         service.accept("R001", "O001", "D001");
@@ -95,7 +102,13 @@ describe("RespondToRideOfferService", () => {
         const service = new RespondToRideOfferService(
             rideRepository,
             driverRepository,
-            rideOfferRepository
+            rideOfferRepository,
+            { execute: vi.fn() },
+            new ExpireRideOfferService(
+                rideRepository,
+                driverRepository,
+                rideOfferRepository
+            )
         );
 
         expect(() => service.accept("R001", "O001", "D002"))
@@ -114,7 +127,13 @@ describe("RespondToRideOfferService", () => {
         const service = new RespondToRideOfferService(
             rideRepository,
             driverRepository,
-            rideOfferRepository
+            rideOfferRepository,
+            { execute: vi.fn() },
+            new ExpireRideOfferService(
+                rideRepository,
+                driverRepository,
+                rideOfferRepository
+            )
         );
 
         service.reject("R001", "O001", "D001");

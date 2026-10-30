@@ -1,6 +1,12 @@
 import type { RideRepository } from "./ports/ride-repository.js";
 import type { DriverRepository } from "./ports/driver-repository.js";
 import type { RideOfferRepository } from "./ports/ride-offer-repository.js";
+import type { ExpireRideOfferService } from "./expire-ride-offer.js";
+import type { RideOffer } from "../domain/ride-offer.js";
+
+interface RideDispatcher {
+    execute(rideId: string): RideOffer | null;
+}
 
 export class RespondToRideOfferService {
     constructor(
@@ -12,7 +18,9 @@ export class RespondToRideOfferService {
             DriverRepository,
             "findById" | "save"
         >,
-        private readonly rideOfferRepository: RideOfferRepository
+        private readonly rideOfferRepository: RideOfferRepository,
+        private readonly rideDispatcher: RideDispatcher,
+        private readonly expireRideOfferService: ExpireRideOfferService
     ) {}
 
     accept(rideId: string, offerId: string, driverId: string) {
@@ -54,6 +62,9 @@ export class RespondToRideOfferService {
         }
 
         if (Date.now() >= offer.expiresAt.getTime()) {
+            if (this.expireRideOfferService.execute(rideId, offerId)) {
+                this.rideDispatcher.execute(rideId);
+            }
             throw new Error("Ride offer has expired");
         }
 
@@ -80,6 +91,13 @@ export class RespondToRideOfferService {
 
         if (offer.status !== "PENDING") {
             throw new Error("Ride offer is no longer pending");
+        }
+
+        if (Date.now() >= offer.expiresAt.getTime()) {
+            if (this.expireRideOfferService.execute(rideId, offerId)) {
+                this.rideDispatcher.execute(rideId);
+            }
+            throw new Error("Ride offer has expired");
         }
 
         const ride = this.rideRepository.findById(offer.rideId);
@@ -113,6 +131,7 @@ export class RespondToRideOfferService {
         this.rideOfferRepository.save(offer);
         this.rideRepository.save(ride);
         this.driverRepository.save(driver);
+        this.rideDispatcher.execute(ride.id);
         return offer;
     }
 }

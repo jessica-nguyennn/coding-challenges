@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { CreateRideService } from "../application/create-ride.js";
 import { CreateRideOfferService } from "../application/create-ride-offer.js";
+import { CancelRideService } from "../application/cancel-ride.js";
+import { CompleteRideService } from "../application/complete-ride.js";
 import { DispatchRideService } from "../application/dispatch-ride.js";
 import { RespondToRideOfferService } from "../application/respond-to-ride-offer.js";
 
@@ -26,7 +28,9 @@ export function createRideRouter(
     service: CreateRideService,
     createRideOfferService: CreateRideOfferService,
     respondToRideOfferService: RespondToRideOfferService,
-    dispatchRideService: DispatchRideService
+    dispatchRideService: DispatchRideService,
+    cancelRideService: CancelRideService,
+    completeRideService: CompleteRideService
 ) {
     const router = Router();
 
@@ -64,6 +68,26 @@ export function createRideRouter(
         try {
             const offer = dispatchRideService.execute(req.params.rideId);
             return res.status(200).json({ offer });
+        } catch (error) {
+            const response = errorResponse(error);
+            return res.status(response.status).json(response.body);
+        }
+    });
+
+    router.post("/:rideId/cancel", (req, res) => {
+        try {
+            cancelRideService.execute(req.params.rideId);
+            return res.status(204).send();
+        } catch (error) {
+            const response = errorResponse(error);
+            return res.status(response.status).json(response.body);
+        }
+    });
+
+    router.post("/:rideId/complete", (req, res) => {
+        try {
+            completeRideService.execute(req.params.rideId);
+            return res.status(204).send();
         } catch (error) {
             const response = errorResponse(error);
             return res.status(response.status).json(response.body);
