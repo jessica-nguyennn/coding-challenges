@@ -77,7 +77,7 @@ describe("RespondToRideOfferService", () => {
             rideOfferRepository
         );
 
-        service.accept("O001", "D001");
+        service.accept("R001", "O001", "D001");
 
         expect(offer.status).toBe("ACCEPTED");
         expect(ride.status).toBe("DRIVER_ACCEPTED");
@@ -96,7 +96,7 @@ describe("RespondToRideOfferService", () => {
             rideOfferRepository
         );
 
-        expect(() => service.accept("O001", "D002"))
+        expect(() => service.accept("R001", "O001", "D002"))
             .toThrow("Driver is not authorized to accept this offer");
 
         expect(offer.status).toBe("PENDING");
@@ -115,7 +115,7 @@ describe("RespondToRideOfferService", () => {
             rideOfferRepository
         );
 
-        service.reject("O001", "D001");
+        service.reject("R001", "O001", "D001");
 
         expect(offer.status).toBe("REJECTED");
         expect(ride.status).toBe("MATCHING");

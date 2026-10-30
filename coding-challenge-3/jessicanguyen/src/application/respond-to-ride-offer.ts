@@ -15,10 +15,10 @@ export class RespondToRideOfferService {
         private readonly rideOfferRepository: RideOfferRepository
     ) {}
 
-    accept(offerId: string, driverId: string): void {
+    accept(rideId: string, offerId: string, driverId: string) {
         const offer = this.rideOfferRepository.findById(offerId);
 
-        if (!offer) {
+        if (!offer || offer.rideId !== rideId) {
             throw new Error("Ride offer does not exist");
         }
 
@@ -64,12 +64,13 @@ export class RespondToRideOfferService {
         this.rideOfferRepository.save(offer);
         this.rideRepository.save(ride);
         this.driverRepository.save(driver);
+        return offer;
     }
 
-    reject(offerId: string, driverId: string): void {
+    reject(rideId: string, offerId: string, driverId: string) {
         const offer = this.rideOfferRepository.findById(offerId);
 
-        if (!offer) {
+        if (!offer || offer.rideId !== rideId) {
             throw new Error("Ride offer does not exist");
         }
 
@@ -112,5 +113,6 @@ export class RespondToRideOfferService {
         this.rideOfferRepository.save(offer);
         this.rideRepository.save(ride);
         this.driverRepository.save(driver);
+        return offer;
     }
 }
