@@ -29,4 +29,12 @@ export class Driver {
 
         this.currentStatus = status;
     }
+
+    offerRide(): void {
+        if (this.currentStatus !== "AVAILABLE") {
+            throw new Error("Only available drivers can receive offers");
+        }
+
+        this.currentStatus = "OFFERED";
+    }
 }
