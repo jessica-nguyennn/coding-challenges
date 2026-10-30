@@ -22,7 +22,7 @@ describe("POST /rides", () => {
         expect(response.status).toBe(201);
         expect(response.body).toHaveProperty("id");
         expect(response.body.passengerId).toBe("P001");
-        expect(response.body.status).toBe("REQUESTED");
+        expect(response.body.status).toBe("MATCHING");
         expect(response.body.assignedDriverId).toBeNull();
     });
 

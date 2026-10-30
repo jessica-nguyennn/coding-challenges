@@ -15,10 +15,15 @@ export class MatchDriverService {
         }
     }
 
-    execute(pickup: Location): Driver | null {
+    execute(pickup: Location, excludedDriverIds: string[] = []): Driver | null {
+        const excludedDrivers = new Set(excludedDriverIds);
         const candidates = this.driverRepository.findAll()
             .flatMap((driver) => {
-                if (driver.status !== "AVAILABLE" || driver.location === null) {
+                if (
+                    driver.status !== "AVAILABLE" ||
+                    driver.location === null ||
+                    excludedDrivers.has(driver.id)
+                ) {
                     return [];
                 }
 

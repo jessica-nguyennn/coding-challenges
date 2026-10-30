@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { CreateRideService } from "../application/create-ride.js";
 import { CreateRideOfferService } from "../application/create-ride-offer.js";
+import { DispatchRideService } from "../application/dispatch-ride.js";
 import { RespondToRideOfferService } from "../application/respond-to-ride-offer.js";
 
 function errorResponse(error: unknown) {
@@ -24,7 +25,8 @@ function errorResponse(error: unknown) {
 export function createRideRouter(
     service: CreateRideService,
     createRideOfferService: CreateRideOfferService,
-    respondToRideOfferService: RespondToRideOfferService
+    respondToRideOfferService: RespondToRideOfferService,
+    dispatchRideService: DispatchRideService
 ) {
     const router = Router();
 
@@ -39,6 +41,7 @@ export function createRideRouter(
 
         try {
             const ride = service.execute(req.body, idempotencyKey);
+            dispatchRideService.execute(ride.id);
             return res.status(201).json(ride);
         } catch (error) {
             const message = error instanceof Error
@@ -54,6 +57,16 @@ export function createRideRouter(
             }
 
             return res.status(400).json({ error: message });
+        }
+    });
+
+    router.post("/:rideId/dispatch", (req, res) => {
+        try {
+            const offer = dispatchRideService.execute(req.params.rideId);
+            return res.status(200).json({ offer });
+        } catch (error) {
+            const response = errorResponse(error);
+            return res.status(response.status).json(response.body);
         }
     });
 

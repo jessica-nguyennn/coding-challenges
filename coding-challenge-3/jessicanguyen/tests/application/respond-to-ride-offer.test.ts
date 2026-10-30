@@ -22,6 +22,7 @@ describe("RespondToRideOfferService", () => {
 
     let rideOfferRepository: {
         findById: ReturnType<typeof vi.fn<(offerId: string) => RideOffer | undefined>>;
+        findByRideId: ReturnType<typeof vi.fn<(rideId: string) => RideOffer[]>>;
         save: ReturnType<typeof vi.fn<(offer: RideOffer) => void>>;
     };
 
@@ -64,10 +65,11 @@ describe("RespondToRideOfferService", () => {
         };
 
         rideOfferRepository = {
-            findById: vi.fn<(offerId: string) => RideOffer | undefined>()
-                .mockReturnValue(offer),
+            findById: vi.fn<(offerId: string) => RideOffer | undefined>(),
+            findByRideId: vi.fn<(rideId: string) => RideOffer[]>(),
             save: vi.fn<(offer: RideOffer) => void>()
         };
+        rideOfferRepository.findById.mockReturnValue(offer);
     });
 
     it("should accept a pending offer and assign the driver to the ride", () => {

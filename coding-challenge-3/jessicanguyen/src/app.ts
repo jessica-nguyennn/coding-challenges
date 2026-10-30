@@ -7,6 +7,8 @@ import { InMemoryRideOfferRepository } from "./infrastructure/persistence/in-mem
 import { UpdateDriverAvailabilityService } from "./application/update-driver-availability.js";
 import { UpdateDriverLocationService } from "./application/update-driver-location.js";
 import { CreateRideOfferService } from "./application/create-ride-offer.js";
+import { DispatchRideService } from "./application/dispatch-ride.js";
+import { MatchDriverService } from "./application/match-driver.js";
 import { RespondToRideOfferService } from "./application/respond-to-ride-offer.js";
 import { createDriverRouter } from "./routes/drivers.js";
 import { createRideRouter } from "./routes/rides.js";
@@ -24,11 +26,23 @@ const createRideService = new CreateRideService(
     passengerRepository,
     rideRepository
 );
+const createRideOfferService = new CreateRideOfferService(
+    rideRepository,
+    driverRepository,
+    rideOfferRepository
+);
+const dispatchRideService = new DispatchRideService(
+    rideRepository,
+    rideOfferRepository,
+    new MatchDriverService(driverRepository),
+    createRideOfferService
+);
 
 app.use("/rides", createRideRouter(
     createRideService,
-    new CreateRideOfferService(rideRepository, driverRepository, rideOfferRepository),
-    new RespondToRideOfferService(rideRepository, driverRepository, rideOfferRepository)
+    createRideOfferService,
+    new RespondToRideOfferService(rideRepository, driverRepository, rideOfferRepository),
+    dispatchRideService
 ));
 app.use("/drivers", createDriverRouter(
     new UpdateDriverAvailabilityService(driverRepository),

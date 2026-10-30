@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import request from "supertest";
 import { CreateRideService } from "../../src/application/create-ride.js";
 import { CreateRideOfferService } from "../../src/application/create-ride-offer.js";
+import { DispatchRideService } from "../../src/application/dispatch-ride.js";
+import { MatchDriverService } from "../../src/application/match-driver.js";
 import { RespondToRideOfferService } from "../../src/application/respond-to-ride-offer.js";
 import { Driver } from "../../src/domain/driver.js";
 import { Location } from "../../src/domain/shared/location.js";
@@ -42,7 +44,13 @@ describe("ride offer endpoints", () => {
         app.use("/rides", createRideRouter(
             new CreateRideService({ exists: () => true }, rides),
             new CreateRideOfferService(rides, drivers, offers),
-            new RespondToRideOfferService(rides, drivers, offers)
+            new RespondToRideOfferService(rides, drivers, offers),
+            new DispatchRideService(
+                rides,
+                offers,
+                new MatchDriverService(drivers),
+                new CreateRideOfferService(rides, drivers, offers)
+            )
         ));
     });
 
