@@ -5,6 +5,8 @@ import { CancelRideService } from "../application/cancel-ride.js";
 import { CompleteRideService } from "../application/complete-ride.js";
 import { DispatchRideService } from "../application/dispatch-ride.js";
 import { RespondToRideOfferService } from "../application/respond-to-ride-offer.js";
+import type { RideRepository } from "../application/ports/ride-repository.js";
+import type { RideOfferRepository } from "../application/ports/ride-offer-repository.js";
 
 function errorResponse(error: unknown) {
     const message = error instanceof Error ? error.message : "Invalid request";
@@ -30,9 +32,22 @@ export function createRideRouter(
     respondToRideOfferService: RespondToRideOfferService,
     dispatchRideService: DispatchRideService,
     cancelRideService: CancelRideService,
-    completeRideService: CompleteRideService
+    completeRideService: CompleteRideService,
+    rideRepository: Pick<RideRepository, "findById" | "findAll">,
+    rideOfferRepository: Pick<RideOfferRepository, "findByRideId">
 ) {
     const router = Router();
+
+    router.get("/", (_req, res) => {
+        return res.status(200).json(rideRepository.findAll());
+    });
+
+    router.get("/:rideId/offers", (req, res) => {
+        if (!rideRepository.findById(req.params.rideId)) {
+            return res.status(404).json({ error: "Ride does not exist" });
+        }
+        return res.status(200).json(rideOfferRepository.findByRideId(req.params.rideId));
+    });
 
     router.post("/", (req, res) => {
         const idempotencyKey = req.get("Idempotency-Key");

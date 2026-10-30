@@ -12,5 +12,7 @@ export class InMemoryRideRepository implements RideRepository {
         return this.rides.get(rideId);
     }
 
-
+    findAll(): Ride[] {
+        return [...this.rides.values()];
+    }
 }

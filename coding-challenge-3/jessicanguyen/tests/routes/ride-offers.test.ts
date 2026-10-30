@@ -65,8 +65,24 @@ describe("ride offer endpoints", () => {
             ),
             dispatchService,
             new CancelRideService(rides, drivers, offers),
-            new CompleteRideService(rides, drivers)
+            new CompleteRideService(rides, drivers),
+            rides,
+            offers
         ));
+    });
+
+    it("lists rides and their offer history for the dashboard", async () => {
+        const rideResponse = await request(app).get("/rides");
+        const offerResponse = await request(app).get("/rides/R001/offers");
+
+        expect(rideResponse.status).toBe(200);
+        expect(rideResponse.body).toHaveLength(1);
+        expect(rideResponse.body[0]).toMatchObject({
+            id: "R001",
+            status: "MATCHING"
+        });
+        expect(offerResponse.status).toBe(200);
+        expect(offerResponse.body).toEqual([]);
     });
 
     it("creates an offer under the ride resource", async () => {

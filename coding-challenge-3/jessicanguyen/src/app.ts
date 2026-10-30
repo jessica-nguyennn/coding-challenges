@@ -1,4 +1,5 @@
 import express from "express";
+import { fileURLToPath } from "node:url";
 import { CreateRideService } from "./application/create-ride.js";
 import { CancelRideService } from "./application/cancel-ride.js";
 import { CompleteRideService } from "./application/complete-ride.js";
@@ -19,6 +20,7 @@ import { createRideRouter } from "./routes/rides.js";
 const app = express();
 
 app.use(express.json());
+app.use(express.static(fileURLToPath(new URL("../public/", import.meta.url))));
 
 const passengerRepository = new InMemoryPassengerRepository();
 const rideRepository = new InMemoryRideRepository();
@@ -68,11 +70,14 @@ app.use("/rides", createRideRouter(
     respondToRideOfferService,
     dispatchRideService,
     new CancelRideService(rideRepository, driverRepository, rideOfferRepository),
-    new CompleteRideService(rideRepository, driverRepository)
+    new CompleteRideService(rideRepository, driverRepository),
+    rideRepository,
+    rideOfferRepository
 ));
 app.use("/drivers", createDriverRouter(
     new UpdateDriverAvailabilityService(driverRepository),
-    new UpdateDriverLocationService(driverRepository)
+    new UpdateDriverLocationService(driverRepository),
+    driverRepository
 ));
 
 export default app;

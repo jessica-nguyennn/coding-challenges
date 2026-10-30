@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ride Dispatch Demo</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/dashboard.js" defer></script>
+</head>
+<body>
+    <header class="topbar">
+        <div>
+            <p class="eyebrow">RIDE-HAILING DISPATCH</p>
+            <h1>Operations dashboard</h1>
+        </div>
+        <button id="refresh-button" class="button button-quiet" type="button">Refresh data</button>
+    </header>
+
+    <main>
+        <section class="intro">
+            <div>
+                <h2>Dispatch, at a glance.</h2>
+                <p>Update drivers, request a ride, and walk through the offer lifecycle.</p>
+            </div>
+            <div class="summary" aria-label="Dashboard summary">
+                <div><span id="available-count">0</span><small>Available</small></div>
+                <div><span id="active-count">0</span><small>Active rides</small></div>
+                <div><span id="ride-count">0</span><small>Total rides</small></div>
+            </div>
+        </section>
+
+        <div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+
+        <section class="panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">FLEET</p>
+                    <h2>Drivers</h2>
+                </div>
+                <span class="helper">Drivers need a location and AVAILABLE status to match.</span>
+            </div>
+            <div id="drivers-list" class="driver-list"></div>
+        </section>
+
+        <section class="panel request-panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">AC-01 · AC-04 · AC-05</p>
+                    <h2>Request a ride</h2>
+                </div>
+                <span class="helper">Nearest available driver within 2 km is offered automatically.</span>
+            </div>
+            <form id="ride-form">
+                <label class="passenger-field">Passenger ID
+                    <input name="passengerId" value="P001" required>
+                </label>
+                <div class="location-fields">
+                    <fieldset>
+                        <legend>Pickup</legend>
+                        <label>Latitude<input name="pickupLatitude" type="number" step="any" min="-90" max="90" value="10.7769" required></label>
+                        <label>Longitude<input name="pickupLongitude" type="number" step="any" min="-180" max="180" value="106.7009" required></label>
+                    </fieldset>
+                    <fieldset>
+                        <legend>Destination</legend>
+                        <label>Latitude<input name="destinationLatitude" type="number" step="any" min="-90" max="90" value="10.8231" required></label>
+                        <label>Longitude<input name="destinationLongitude" type="number" step="any" min="-180" max="180" value="106.6297" required></label>
+                    </fieldset>
+                </div>
+                <button class="button button-primary" type="submit">Request ride &amp; dispatch</button>
+            </form>
+        </section>
+
+        <section class="panel">
+            <div class="section-heading">
+                <div>
+                    <p class="eyebrow">AC-05 · AC-06 · AC-07</p>
+                    <h2>Rides &amp; offers</h2>
+                </div>
+                <span class="helper">Offers expire after 30 seconds.</span>
+            </div>
+            <div id="rides-list" class="rides-list"></div>
+        </section>
+
+        <details class="panel api-panel">
+            <summary>API activity</summary>
+            <pre id="api-log">Ready. Dashboard actions call the local API.</pre>
+        </details>
+    </main>
+    <footer>In-memory demo · Data resets when the server restarts</footer>
+</body>
+</html>

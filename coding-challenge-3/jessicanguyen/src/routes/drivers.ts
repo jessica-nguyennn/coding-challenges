@@ -1,12 +1,23 @@
 import { Router } from "express";
+import type { DriverRepository } from "../application/ports/driver-repository.js";
 import { UpdateDriverLocationService } from "../application/update-driver-location.js";
 import { UpdateDriverAvailabilityService } from "../application/update-driver-availability.js";
 
 export function createDriverRouter(
     availabilityService: UpdateDriverAvailabilityService,
-    locationService: UpdateDriverLocationService
+    locationService: UpdateDriverLocationService,
+    driverRepository: Pick<DriverRepository, "findAll">
 ) {
     const router = Router();
+
+    router.get("/", (_req, res) => {
+        const drivers = driverRepository.findAll().map((driver) => ({
+            id: driver.id,
+            status: driver.status,
+            location: driver.location
+        }));
+        return res.status(200).json(drivers);
+    });
 
     router.put("/:driverId/availability", (req, res) => {
         const status = req.body?.status;

@@ -2,6 +2,21 @@ import { beforeEach, describe, expect, it } from "vitest";
 import request from "supertest";
 import app from "../../src/app.js";
 
+describe("GET /drivers", () => {
+    it("lists driver statuses and latest locations for the dashboard", async () => {
+        const response = await request(app).get("/drivers");
+
+        expect(response.status).toBe(200);
+        expect(response.body).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                id: "D001",
+                status: "OFFLINE",
+                location: { latitude: 10.778, longitude: 106.701 }
+            })
+        ]));
+    });
+});
+
 describe("PUT /drivers/:driverId/availability", () => {
     beforeEach(async () => {
         await request(app)
