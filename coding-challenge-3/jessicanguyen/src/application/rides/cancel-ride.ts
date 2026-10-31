@@ -16,6 +16,10 @@ export class CancelRideService {
             throw new Error("Ride does not exist");
         }
 
+        if (ride.status === "CANCELLED") {
+            return;
+        }
+
         const cancellableStatuses = [
             "REQUESTED",
             "MATCHING",
@@ -29,7 +33,7 @@ export class CancelRideService {
 
         // No driver has been assigned, so only the ride needs updating.
         if (ride.status === "REQUESTED" || ride.status === "MATCHING") {
-            ride.status = "CANCELLED";
+            ride.transitionTo("CANCELLED");
             this.rideRepository.save(ride);
             return;
         }
@@ -74,7 +78,7 @@ export class CancelRideService {
             driver.releaseFromAcceptedRide();
         }
 
-        ride.status = "CANCELLED";
+        ride.transitionTo("CANCELLED");
 
         this.driverRepository.save(driver);
         this.rideRepository.save(ride);

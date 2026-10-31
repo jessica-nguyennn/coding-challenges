@@ -60,4 +60,17 @@ describe("CompleteRideService", () => {
         expect(rideRepository.save).toHaveBeenCalledWith(ride);
         expect(driverRepository.save).toHaveBeenCalledWith(driver);
     });
+
+    it("should treat completing the same ride again as a no-op", () => {
+        completeRideService.execute("R001");
+        rideRepository.save.mockClear();
+        driverRepository.save.mockClear();
+
+        expect(() => completeRideService.execute("R001")).not.toThrow();
+
+        expect(ride.status).toBe("COMPLETED");
+        expect(driver.status).toBe("AVAILABLE");
+        expect(rideRepository.save).not.toHaveBeenCalled();
+        expect(driverRepository.save).not.toHaveBeenCalled();
+    });
 });

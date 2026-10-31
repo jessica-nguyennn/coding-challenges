@@ -38,7 +38,7 @@ export class ExpireRideOfferService {
         }
 
         offer.status = "EXPIRED";
-        ride.status = "MATCHING";
+        ride.transitionTo("MATCHING");
         ride.assignedDriverId = null;
         driver.rejectRide();
 

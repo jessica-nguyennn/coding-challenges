@@ -34,10 +34,6 @@ export class RespondToRideOfferService {
             throw new Error("Driver is not authorized to accept this offer");
         }
 
-        if (offer.status !== "PENDING") {
-            throw new Error("Ride offer is no longer pending");
-        }
-
         const ride = this.rideRepository.findById(offer.rideId);
 
         if (!ride) {
@@ -48,6 +44,21 @@ export class RespondToRideOfferService {
 
         if (!driver) {
             throw new Error("Driver does not exist");
+        }
+
+        if (offer.status === "ACCEPTED") {
+            if (
+                ride.status === "DRIVER_ACCEPTED" &&
+                ride.assignedDriverId === driverId &&
+                driver.status === "BUSY"
+            ) {
+                return offer;
+            }
+            throw new Error("Ride offer is no longer pending");
+        }
+
+        if (offer.status !== "PENDING") {
+            throw new Error("Ride offer is no longer pending");
         }
 
         if (
@@ -69,7 +80,7 @@ export class RespondToRideOfferService {
         }
 
         offer.status = "ACCEPTED";
-        ride.status = "DRIVER_ACCEPTED";
+        ride.transitionTo("DRIVER_ACCEPTED");
         driver.acceptRide();
 
         this.rideOfferRepository.save(offer);
@@ -124,7 +135,7 @@ export class RespondToRideOfferService {
         }
 
         offer.status = "REJECTED";
-        ride.status = "MATCHING";
+        ride.transitionTo("MATCHING");
         ride.assignedDriverId = null;
         driver.rejectRide();
 

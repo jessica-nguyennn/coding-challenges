@@ -65,5 +65,16 @@ describe("CancelRideService", () => {
         expect(rideOfferRepository.findByRideId).not.toHaveBeenCalled();
     });
 
+    it("should treat cancelling the same ride again as a no-op", () => {
+        cancelRideService.execute("R001");
+        rideRepository.save.mockClear();
+
+        expect(() => cancelRideService.execute("R001")).not.toThrow();
+
+        expect(ride.status).toBe("CANCELLED");
+        expect(rideRepository.save).not.toHaveBeenCalled();
+        expect(driverRepository.findById).not.toHaveBeenCalled();
+    });
+
     // Keep your other existing cancellation tests below this point.
 });

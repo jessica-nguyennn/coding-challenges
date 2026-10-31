@@ -13,6 +13,9 @@ export class CompleteRideService {
         if (!ride) {
             throw new Error("Ride does not exist");
         }
+        if (ride.status === "COMPLETED") {
+            return;
+        }
         if (ride.status !== "DRIVER_ACCEPTED") {
             throw new Error("Only accepted rides can be completed");
         }
@@ -29,7 +32,7 @@ export class CompleteRideService {
             throw new Error("Driver does not exist");
         }
 
-        ride.status = "COMPLETED";
+        ride.transitionTo("COMPLETED");
         driver.completeRide();
 
         this.rideRepository.save(ride);

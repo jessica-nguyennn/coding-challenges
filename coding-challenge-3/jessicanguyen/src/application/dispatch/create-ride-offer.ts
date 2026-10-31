@@ -75,7 +75,7 @@ export class CreateRideOfferService {
         );
 
         driver.offerRide();
-        ride.status = "DRIVER_ASSIGNED";
+        ride.transitionTo("DRIVER_ASSIGNED");
         ride.assignedDriverId = driverId;
         this.driverRepository.save(driver);
         this.rideRepository.save(ride);

@@ -36,7 +36,7 @@ export class DispatchRideService {
         }
 
         if (ride.status === "REQUESTED") {
-            ride.status = "MATCHING";
+            ride.transitionTo("MATCHING");
             this.rideRepository.save(ride);
         } else if (ride.status !== "MATCHING") {
             throw new Error("Ride cannot be dispatched in its current state");

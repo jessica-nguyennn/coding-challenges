@@ -74,11 +74,12 @@ describe("RespondToRideOfferService", () => {
     });
 
     it("should accept a pending offer and assign the driver to the ride", () => {
+        const dispatcher = { execute: vi.fn() };
         const service = new RespondToRideOfferService(
             rideRepository,
             driverRepository,
             rideOfferRepository,
-            { execute: vi.fn() },
+            dispatcher,
             new ExpireRideOfferService(
                 rideRepository,
                 driverRepository,
@@ -97,6 +98,64 @@ describe("RespondToRideOfferService", () => {
         expect(driverRepository.save).toHaveBeenCalledWith(driver);
         expect(rideOfferRepository.save).toHaveBeenCalledWith(offer);
     });
+
+    it("should treat acceptance repeated by the same driver as successful without reapplying it", () => {
+        const dispatcher = { execute: vi.fn() };
+        const service = new RespondToRideOfferService(
+            rideRepository,
+            driverRepository,
+            rideOfferRepository,
+            dispatcher,
+            new ExpireRideOfferService(rideRepository, driverRepository, rideOfferRepository)
+        );
+
+        service.accept("R001", "O001", "D001");
+        rideRepository.save.mockClear();
+        driverRepository.save.mockClear();
+        rideOfferRepository.save.mockClear();
+
+        const repeatedResult = service.accept("R001", "O001", "D001");
+
+        expect(repeatedResult).toBe(offer);
+        expect(offer.status).toBe("ACCEPTED");
+        expect(ride.status).toBe("DRIVER_ACCEPTED");
+        expect(driver.status).toBe("BUSY");
+        expect(rideRepository.save).not.toHaveBeenCalled();
+        expect(driverRepository.save).not.toHaveBeenCalled();
+        expect(rideOfferRepository.save).not.toHaveBeenCalled();
+        expect(dispatcher.execute).not.toHaveBeenCalled();
+    });
+
+    it("should reject acceptance by another driver after the offer was accepted", () => {
+        const service = new RespondToRideOfferService(
+            rideRepository,
+            driverRepository,
+            rideOfferRepository,
+            { execute: vi.fn() },
+            new ExpireRideOfferService(rideRepository, driverRepository, rideOfferRepository)
+        );
+        service.accept("R001", "O001", "D001");
+
+        expect(() => service.accept("R001", "O001", "D002"))
+            .toThrow("Driver is not authorized to accept this offer");
+    });
+
+    it.each(["REJECTED", "EXPIRED"] as const)(
+        "should reject acceptance of a %s offer",
+        (status) => {
+            offer.status = status;
+            const service = new RespondToRideOfferService(
+                rideRepository,
+                driverRepository,
+                rideOfferRepository,
+                { execute: vi.fn() },
+                new ExpireRideOfferService(rideRepository, driverRepository, rideOfferRepository)
+            );
+
+            expect(() => service.accept("R001", "O001", "D001"))
+                .toThrow("Ride offer is no longer pending");
+        }
+    );
 
     it("should reject acceptance from a different driver", () => {
         const service = new RespondToRideOfferService(
