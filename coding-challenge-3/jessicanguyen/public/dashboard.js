@@ -246,7 +246,7 @@ document.querySelector("#ride-form").addEventListener("submit", async (event) =>
         const result = await api("POST", "/rides", body, {
             "Idempotency-Key": idempotencyKey
         });
-        showNotice(`Ride ${result.id} requested. Dispatch status: ${result.status}.`);
+        showNotice(`Ride ${result.id} requested. Dispatch queued asynchronously.`);
         await refresh();
     } catch (error) {
         showNotice(error.message, true);
@@ -255,3 +255,4 @@ document.querySelector("#ride-form").addEventListener("submit", async (event) =>
 
 document.querySelector("#refresh-button").addEventListener("click", refresh);
 refresh();
+window.setInterval(refresh, 2000);

@@ -11,10 +11,12 @@ describe("CreateRideService", () => {
         const rideRepository = {
             save: vi.fn()
         };
+        const eventBus = { publish: vi.fn() };
 
         const service = new CreateRideService(
             passengerRepository,
-            rideRepository
+            rideRepository,
+            eventBus
         );
 
         const ride = service.execute({
@@ -34,6 +36,11 @@ describe("CreateRideService", () => {
         expect(ride.status).toBe("REQUESTED");
         expect(ride.assignedDriverId).toBeNull();
         expect(rideRepository.save).toHaveBeenCalledWith(ride);
+        expect(eventBus.publish).toHaveBeenCalledWith(expect.objectContaining({
+            type: "RideCreated",
+            eventId: ride.id,
+            rideId: ride.id
+        }));
     });
 
     it("should reject a request from an unknown passenger", () => {
@@ -44,10 +51,12 @@ describe("CreateRideService", () => {
         const rideRepository = {
             save: vi.fn()
         };
+        const eventBus = { publish: vi.fn() };
 
         const service = new CreateRideService(
             passengerRepository,
-            rideRepository
+            rideRepository,
+            eventBus
         );
 
         const request = {
@@ -67,6 +76,7 @@ describe("CreateRideService", () => {
         );
 
         expect(rideRepository.save).not.toHaveBeenCalled();
+        expect(eventBus.publish).not.toHaveBeenCalled();
     });
 
     it("should return the original ride when the same request is repeated", () => {
@@ -77,10 +87,12 @@ describe("CreateRideService", () => {
         const rideRepository = {
             save: vi.fn()
         };
+        const eventBus = { publish: vi.fn() };
 
         const service = new CreateRideService(
             passengerRepository,
-            rideRepository
+            rideRepository,
+            eventBus
         );
 
         const request = {
@@ -100,6 +112,7 @@ describe("CreateRideService", () => {
 
         expect(secondRide).toBe(firstRide);
         expect(rideRepository.save).toHaveBeenCalledTimes(1);
+        expect(eventBus.publish).toHaveBeenCalledTimes(1);
     });
 
     it("should reject a different request with the same idempotency key", () => {
@@ -110,10 +123,12 @@ describe("CreateRideService", () => {
         const rideRepository = {
             save: vi.fn()
         };
+        const eventBus = { publish: vi.fn() };
 
         const service = new CreateRideService(
             passengerRepository,
-            rideRepository
+            rideRepository,
+            eventBus
         );
 
         const firstRequest = {
@@ -143,5 +158,6 @@ describe("CreateRideService", () => {
         }).toThrow("Idempotency key already used with a different request");
 
         expect(rideRepository.save).toHaveBeenCalledTimes(1);
+        expect(eventBus.publish).toHaveBeenCalledTimes(1);
     });
 });

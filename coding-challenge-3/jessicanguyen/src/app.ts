@@ -1,5 +1,6 @@
 import express from "express";
 import { fileURLToPath } from "node:url";
+import { InMemoryEventBus } from "./infrastructure/events/in-memory-event-bus.js";
 import { CreateRideService } from "./application/rides/create-ride.js";
 import { CancelRideService } from "./application/rides/cancel-ride.js";
 import { CompleteRideService } from "./application/rides/complete-ride.js";
@@ -14,6 +15,8 @@ import { CreateRideOfferService } from "./application/dispatch/create-ride-offer
 import { DispatchRideService } from "./application/dispatch/dispatch-ride.js";
 import { MatchDriverService } from "./application/dispatch/match-driver.js";
 import { RespondToRideOfferService } from "./application/dispatch/respond-to-ride-offer.js";
+import { RideCreatedHandler } from "./application/dispatch/ride-created-handler.js";
+import { startEventConsumer } from "./infrastructure/events/start-event-consumer.js";
 import { createDriverRouter } from "./routes/drivers.js";
 import { createRideRouter } from "./routes/rides.js";
 
@@ -26,10 +29,12 @@ const passengerRepository = new InMemoryPassengerRepository();
 const rideRepository = new InMemoryRideRepository();
 const driverRepository = new InMemoryDriverRepository();
 const rideOfferRepository = new InMemoryRideOfferRepository();
+const eventBus = new InMemoryEventBus();
 
 const createRideService = new CreateRideService(
     passengerRepository,
-    rideRepository
+    rideRepository,
+    eventBus
 );
 const createRideOfferService = new CreateRideOfferService(
     rideRepository,
@@ -48,6 +53,7 @@ const dispatchRideService = new DispatchRideService(
     createRideOfferService,
     expireRideOfferService
 );
+startEventConsumer(eventBus, new RideCreatedHandler(dispatchRideService));
 createRideOfferService.setExpirationHandler((rideId, offerId, expiresAt) => {
     const timer = setTimeout(() => {
         if (expireRideOfferService.execute(rideId, offerId)) {

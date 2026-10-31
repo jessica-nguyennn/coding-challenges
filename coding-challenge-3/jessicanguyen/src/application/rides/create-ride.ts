@@ -3,6 +3,7 @@ import { Ride } from "../../domain/ride.js";
 import { Location } from "../../domain/shared/location.js";
 import type { PassengerRepository } from "../ports/passenger-repository.js";
 import type { RideRepository } from "../ports/ride-repository.js";
+import type { EventBus } from "../ports/event-bus.js";
 
 
 interface CreateRideInput {
@@ -24,7 +25,8 @@ export class CreateRideService {
     >();
     constructor(
         private passengerRepository: PassengerRepository,
-        private rideRepository: Pick<RideRepository, "save">
+        private rideRepository: Pick<RideRepository, "save">,
+        private eventBus: Pick<EventBus, "publish">
     ) {
     }
 
@@ -52,6 +54,12 @@ export class CreateRideService {
 
         this.rideRepository.save(ride);
         this.idempotencyRecords.set(idempotencyKey, { fingerprint, ride });
+        this.eventBus.publish({
+            type: "RideCreated",
+            eventId: ride.id,
+            occurredAt: new Date(),
+            rideId: ride.id
+        });
 
         return ride;
     }

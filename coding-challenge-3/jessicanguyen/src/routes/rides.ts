@@ -60,7 +60,6 @@ export function createRideRouter(
 
         try {
             const ride = service.execute(req.body, idempotencyKey);
-            dispatchRideService.execute(ride.id);
             return res.status(201).json(ride);
         } catch (error) {
             const message = error instanceof Error

@@ -54,7 +54,11 @@ describe("ride offer endpoints", () => {
             expireOfferService
         );
         app.use("/rides", createRideRouter(
-            new CreateRideService({ exists: () => true }, rides),
+            new CreateRideService(
+                { exists: () => true },
+                rides,
+                { publish: () => undefined }
+            ),
             createOfferService,
             new RespondToRideOfferService(
                 rides,
