@@ -10,6 +10,13 @@ import type { RideOfferRepository } from "../ports/ride-offer-repository.js";
 
 const DEFAULT_RESPONSE_TIMEOUT_MS = 30_000;
 
+export class DriverNotAvailableError extends Error {
+    constructor() {
+        super("Driver is not available");
+        this.name = "DriverNotAvailableError";
+    }
+}
+
 export class CreateRideOfferService {
     private expirationHandler?: (
         rideId: string,
@@ -24,7 +31,7 @@ export class CreateRideOfferService {
         >,
         private readonly driverRepository: Pick<
             DriverRepository,
-            "findById" | "save"
+            "findById" | "claimForOffer"
         >,
         private readonly rideOfferRepository: RideOfferRepository,
         private readonly responseTimeoutMs = DEFAULT_RESPONSE_TIMEOUT_MS
@@ -60,10 +67,6 @@ export class CreateRideOfferService {
             throw new Error("Ride is not matching");
         }
 
-        if (driver.status !== "AVAILABLE") {
-            throw new Error("Driver is not available");
-        }
-
         const createdAt = new Date();
 
         const offer = new RideOffer(
@@ -74,10 +77,12 @@ export class CreateRideOfferService {
             new Date(createdAt.getTime() + this.responseTimeoutMs)
         );
 
-        driver.offerRide();
+        if (!this.driverRepository.claimForOffer(driverId)) {
+            throw new DriverNotAvailableError();
+        }
+
         ride.transitionTo("DRIVER_ASSIGNED");
         ride.assignedDriverId = driverId;
-        this.driverRepository.save(driver);
         this.rideRepository.save(ride);
         this.rideOfferRepository.save(offer);
         this.expirationHandler?.(rideId, offer.id, offer.expiresAt);

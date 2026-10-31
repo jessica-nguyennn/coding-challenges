@@ -20,4 +20,14 @@ export class InMemoryDriverRepository implements DriverRepository {
     save(driver: Driver): void {
         this.drivers.set(driver.id, driver);
     }
+
+    claimForOffer(driverId: string): Driver | undefined {
+        const driver = this.drivers.get(driverId);
+        if (!driver || driver.status !== "AVAILABLE") {
+            return undefined;
+        }
+
+        driver.offerRide();
+        return driver;
+    }
 }

@@ -2,7 +2,10 @@ import type { Ride } from "../../domain/ride.js";
 import type { RideOffer } from "../../domain/ride-offer.js";
 import type { RideOfferRepository } from "../ports/ride-offer-repository.js";
 import type { RideRepository } from "../ports/ride-repository.js";
-import { CreateRideOfferService } from "./create-ride-offer.js";
+import {
+    CreateRideOfferService,
+    DriverNotAvailableError
+} from "./create-ride-offer.js";
 import { ExpireRideOfferService } from "./expire-ride-offer.js";
 import { MatchDriverService } from "./match-driver.js";
 
@@ -43,16 +46,25 @@ export class DispatchRideService {
         }
 
         const previousOffers = this.rideOfferRepository.findByRideId(rideId);
-        const excludedDriverIds = previousOffers.map((offer) => offer.driverId);
-        const driver = this.matchDriverService.execute(
-            ride.pickup,
-            excludedDriverIds
-        );
+        const excludedDriverIds = new Set(previousOffers.map((offer) => offer.driverId));
 
-        if (!driver) {
-            return null;
+        while (true) {
+            const driver = this.matchDriverService.execute(
+                ride.pickup,
+                [...excludedDriverIds]
+            );
+            if (!driver) {
+                return null;
+            }
+
+            try {
+                return this.createRideOfferService.execute(rideId, driver.id);
+            } catch (error) {
+                if (!(error instanceof DriverNotAvailableError)) {
+                    throw error;
+                }
+                excludedDriverIds.add(driver.id);
+            }
         }
-
-        return this.createRideOfferService.execute(rideId, driver.id);
     }
 }

@@ -17,6 +17,7 @@ describe("CreateRideOfferService", () => {
     let driverRepository: {
         findById: ReturnType<typeof vi.fn<(driverId: string) => Driver | undefined>>;
         save: ReturnType<typeof vi.fn<(driver: Driver) => void>>;
+        claimForOffer: ReturnType<typeof vi.fn<() => Driver | undefined>>;
     };
 
     let rideOfferRepository: {
@@ -49,7 +50,14 @@ describe("CreateRideOfferService", () => {
         driverRepository = {
             findById: vi.fn<(driverId: string) => Driver | undefined>()
                 .mockReturnValue(driver),
-            save: vi.fn<(driver: Driver) => void>()
+            save: vi.fn<(driver: Driver) => void>(),
+            claimForOffer: vi.fn(() => {
+                if (driver.status !== "AVAILABLE") {
+                    return undefined;
+                }
+                driver.offerRide();
+                return driver;
+            })
         };
 
         rideOfferRepository = {
@@ -73,7 +81,7 @@ describe("CreateRideOfferService", () => {
         expect(ride.assignedDriverId).toBe("D001");
         expect(driver.status).toBe("OFFERED");
         expect(rideRepository.save).toHaveBeenCalledWith(ride);
-        expect(driverRepository.save).toHaveBeenCalledWith(driver);
+        expect(driverRepository.claimForOffer).toHaveBeenCalledWith("D001");
         expect(rideOfferRepository.save).toHaveBeenCalledWith(offer);
     });
 
@@ -95,6 +103,7 @@ describe("CreateRideOfferService", () => {
 
         expect(rideRepository.save).not.toHaveBeenCalled();
         expect(driverRepository.save).not.toHaveBeenCalled();
+        expect(driverRepository.claimForOffer).toHaveBeenCalledWith("D001");
         expect(rideOfferRepository.save).not.toHaveBeenCalled();
     });
 

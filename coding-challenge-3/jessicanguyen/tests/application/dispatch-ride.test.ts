@@ -191,4 +191,41 @@ describe("DispatchRideService", () => {
         expect(nextOffer?.driverId).toBe("D002");
         expect(context.ride.status).toBe("DRIVER_ASSIGNED");
     });
+
+    it("does not offer the same driver to two rides dispatched concurrently", async () => {
+        const context = setup();
+        const driver = availableDriver("D001", 10.777, 106.701);
+        context.driverRepository.save(driver);
+
+        const competingRide = new Ride(
+            "R002",
+            "P001",
+            new Location(10.777, 106.701),
+            new Location(10.8231, 106.6297)
+        );
+        context.rideRepository.save(competingRide);
+
+        const staleCandidate = availableDriver("D001", 10.777, 106.701);
+        const competingDispatch = new DispatchRideService(
+            context.rideRepository,
+            context.rideOfferRepository,
+            new MatchDriverService({ findAll: () => [staleCandidate] }),
+            context.createRideOfferService,
+            context.expireRideOfferService
+        );
+
+        const results = await Promise.all([
+            competingDispatch.execute("R001"),
+            competingDispatch.execute("R002")
+        ]);
+        const rides = [context.ride, competingRide];
+        const assignedRides = rides.filter((ride) => ride.assignedDriverId === "D001");
+
+        expect(results.filter(Boolean)).toHaveLength(1);
+        expect(assignedRides).toHaveLength(1);
+        expect(rides.find((ride) => ride.status === "MATCHING")?.assignedDriverId).toBeNull();
+        expect(driver.status).toBe("OFFERED");
+        expect(context.rideOfferRepository.findByRideId("R001").length +
+            context.rideOfferRepository.findByRideId("R002").length).toBe(1);
+    });
 });
