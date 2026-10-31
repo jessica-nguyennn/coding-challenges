@@ -1,8 +1,8 @@
-import type { RideRepository } from "./ports/ride-repository.js";
-import type { DriverRepository } from "./ports/driver-repository.js";
-import type { RideOfferRepository } from "./ports/ride-offer-repository.js";
+import type { RideRepository } from "../ports/ride-repository.js";
+import type { DriverRepository } from "../ports/driver-repository.js";
+import type { RideOfferRepository } from "../ports/ride-offer-repository.js";
 import type { ExpireRideOfferService } from "./expire-ride-offer.js";
-import type { RideOffer } from "../domain/ride-offer.js";
+import type { RideOffer } from "../../domain/ride-offer.js";
 
 interface RideDispatcher {
     execute(rideId: string): RideOffer | null;

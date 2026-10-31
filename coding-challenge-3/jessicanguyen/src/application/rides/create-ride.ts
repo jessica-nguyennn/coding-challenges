@@ -1,8 +1,8 @@
 import { randomUUID } from "node:crypto";
-import { Ride } from "../domain/ride.js";
-import { Location } from "../domain/shared/location.js";
-import type { PassengerRepository } from "./ports/passenger-repository.js";
-import type { RideRepository } from "./ports/ride-repository.js";
+import { Ride } from "../../domain/ride.js";
+import { Location } from "../../domain/shared/location.js";
+import type { PassengerRepository } from "../ports/passenger-repository.js";
+import type { RideRepository } from "../ports/ride-repository.js";
 
 
 interface CreateRideInput {

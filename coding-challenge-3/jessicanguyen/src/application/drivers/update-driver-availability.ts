@@ -1,5 +1,5 @@
-import type { DriverAvailability } from "../domain/driver.js";
-import type { DriverRepository } from "./ports/driver-repository.js";
+import type { DriverAvailability } from "../../domain/driver.js";
+import type { DriverRepository } from "../ports/driver-repository.js";
 
 export class UpdateDriverAvailabilityService {
     constructor(private driverRepository: DriverRepository) {}

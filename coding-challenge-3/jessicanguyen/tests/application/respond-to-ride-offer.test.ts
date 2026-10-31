@@ -3,8 +3,8 @@ import { Ride } from "../../src/domain/ride.js";
 import { Driver } from "../../src/domain/driver.js";
 import { RideOffer } from "../../src/domain/ride-offer.js";
 import { Location } from "../../src/domain/shared/location.js";
-import { RespondToRideOfferService } from "../../src/application/respond-to-ride-offer.js";
-import { ExpireRideOfferService } from "../../src/application/expire-ride-offer.js";
+import { RespondToRideOfferService } from "../../src/application/dispatch/respond-to-ride-offer.js";
+import { ExpireRideOfferService } from "../../src/application/dispatch/expire-ride-offer.js";
 
 describe("RespondToRideOfferService", () => {
     let ride: Ride;

@@ -1,5 +1,5 @@
-import { Location } from "../domain/shared/location.js";
-import type { DriverRepository } from "./ports/driver-repository.js";
+import { Location } from "../../domain/shared/location.js";
+import type { DriverRepository } from "../ports/driver-repository.js";
 
 export class UpdateDriverLocationService {
     constructor(private driverRepository: DriverRepository) {}

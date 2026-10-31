@@ -1,7 +1,7 @@
-import type { Ride } from "../domain/ride.js";
-import type { RideOffer } from "../domain/ride-offer.js";
-import type { RideOfferRepository } from "./ports/ride-offer-repository.js";
-import type { RideRepository } from "./ports/ride-repository.js";
+import type { Ride } from "../../domain/ride.js";
+import type { RideOffer } from "../../domain/ride-offer.js";
+import type { RideOfferRepository } from "../ports/ride-offer-repository.js";
+import type { RideRepository } from "../ports/ride-repository.js";
 import { CreateRideOfferService } from "./create-ride-offer.js";
 import { ExpireRideOfferService } from "./expire-ride-offer.js";
 import { MatchDriverService } from "./match-driver.js";

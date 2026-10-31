@@ -1,12 +1,12 @@
 import { randomUUID } from "node:crypto";
 
-import type { Ride } from "../domain/ride.js";
-import type { Driver } from "../domain/driver.js";
-import { RideOffer } from "../domain/ride-offer.js";
+import type { Ride } from "../../domain/ride.js";
+import type { Driver } from "../../domain/driver.js";
+import { RideOffer } from "../../domain/ride-offer.js";
 
-import type { RideRepository } from "./ports/ride-repository.js";
-import type { DriverRepository } from "./ports/driver-repository.js";
-import type { RideOfferRepository } from "./ports/ride-offer-repository.js";
+import type { RideRepository } from "../ports/ride-repository.js";
+import type { DriverRepository } from "../ports/driver-repository.js";
+import type { RideOfferRepository } from "../ports/ride-offer-repository.js";
 
 const DEFAULT_RESPONSE_TIMEOUT_MS = 30_000;
 

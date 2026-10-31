@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { Driver } from "../../src/domain/driver.js";
 import { Location } from "../../src/domain/shared/location.js";
-import { MatchDriverService } from "../../src/application/match-driver.js";
+import { MatchDriverService } from "../../src/application/dispatch/match-driver.js";
 
 function availableDriver(id: string, latitude: number, longitude: number): Driver {
     return new Driver(id, new Location(latitude, longitude), "AVAILABLE");

@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { CancelRideService } from "../../src/application/cancel-ride.js";
+import { CancelRideService } from "../../src/application/rides/cancel-ride.js";
 import { Ride } from "../../src/domain/ride.js";
 import { Location } from "../../src/domain/shared/location.js";
 import { Driver } from "../../src/domain/driver.js";

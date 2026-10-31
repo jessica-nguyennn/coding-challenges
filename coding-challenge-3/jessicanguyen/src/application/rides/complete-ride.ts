@@ -1,5 +1,5 @@
-import type { RideRepository } from "./ports/ride-repository.js";
-import type { DriverRepository } from "./ports/driver-repository.js";
+import type { RideRepository } from "../ports/ride-repository.js";
+import type { DriverRepository } from "../ports/driver-repository.js";
 
 export class CompleteRideService {
     constructor(

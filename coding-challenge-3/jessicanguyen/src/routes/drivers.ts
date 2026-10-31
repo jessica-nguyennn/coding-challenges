@@ -1,7 +1,7 @@
 import { Router } from "express";
 import type { DriverRepository } from "../application/ports/driver-repository.js";
-import { UpdateDriverLocationService } from "../application/update-driver-location.js";
-import { UpdateDriverAvailabilityService } from "../application/update-driver-availability.js";
+import { UpdateDriverLocationService } from "../application/drivers/update-driver-location.js";
+import { UpdateDriverAvailabilityService } from "../application/drivers/update-driver-availability.js";
 
 export function createDriverRouter(
     availabilityService: UpdateDriverAvailabilityService,

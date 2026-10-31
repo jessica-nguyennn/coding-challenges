@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { CreateRideService } from "../../src/application/create-ride.js";
+import { CreateRideService } from "../../src/application/rides/create-ride.js";
 
 describe("CreateRideService", () => {
     it("should create and save a ride for an existing passenger", () => {

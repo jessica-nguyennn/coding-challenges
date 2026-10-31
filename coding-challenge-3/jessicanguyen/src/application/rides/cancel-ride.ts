@@ -1,6 +1,6 @@
-import type { RideRepository } from "./ports/ride-repository.js";
-import type { DriverRepository } from "./ports/driver-repository.js";
-import type { RideOfferRepository } from "./ports/ride-offer-repository.js";
+import type { RideRepository } from "../ports/ride-repository.js";
+import type { DriverRepository } from "../ports/driver-repository.js";
+import type { RideOfferRepository } from "../ports/ride-offer-repository.js";
 
 export class CancelRideService {
     constructor(

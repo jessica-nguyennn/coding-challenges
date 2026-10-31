@@ -1,10 +1,10 @@
 import { Router } from "express";
-import { CreateRideService } from "../application/create-ride.js";
-import { CreateRideOfferService } from "../application/create-ride-offer.js";
-import { CancelRideService } from "../application/cancel-ride.js";
-import { CompleteRideService } from "../application/complete-ride.js";
-import { DispatchRideService } from "../application/dispatch-ride.js";
-import { RespondToRideOfferService } from "../application/respond-to-ride-offer.js";
+import { CreateRideService } from "../application/rides/create-ride.js";
+import { CreateRideOfferService } from "../application/dispatch/create-ride-offer.js";
+import { CancelRideService } from "../application/rides/cancel-ride.js";
+import { CompleteRideService } from "../application/rides/complete-ride.js";
+import { DispatchRideService } from "../application/dispatch/dispatch-ride.js";
+import { RespondToRideOfferService } from "../application/dispatch/respond-to-ride-offer.js";
 import type { RideRepository } from "../application/ports/ride-repository.js";
 import type { RideOfferRepository } from "../application/ports/ride-offer-repository.js";
 

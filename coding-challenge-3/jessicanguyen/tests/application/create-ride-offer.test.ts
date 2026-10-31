@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { Ride } from "../../src/domain/ride.js";
 import { Driver } from "../../src/domain/driver.js";
 import { Location } from "../../src/domain/shared/location.js";
-import { CreateRideOfferService } from "../../src/application/create-ride-offer.js";
+import { CreateRideOfferService } from "../../src/application/dispatch/create-ride-offer.js";
 import { RideOffer } from "../../src/domain/ride-offer.js";
 
 describe("CreateRideOfferService", () => {

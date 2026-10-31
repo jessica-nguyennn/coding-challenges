@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { CreateRideOfferService } from "../../src/application/create-ride-offer.js";
-import { ExpireRideOfferService } from "../../src/application/expire-ride-offer.js";
-import { DispatchRideService } from "../../src/application/dispatch-ride.js";
-import { MatchDriverService } from "../../src/application/match-driver.js";
-import { RespondToRideOfferService } from "../../src/application/respond-to-ride-offer.js";
+import { CreateRideOfferService } from "../../src/application/dispatch/create-ride-offer.js";
+import { ExpireRideOfferService } from "../../src/application/dispatch/expire-ride-offer.js";
+import { DispatchRideService } from "../../src/application/dispatch/dispatch-ride.js";
+import { MatchDriverService } from "../../src/application/dispatch/match-driver.js";
+import { RespondToRideOfferService } from "../../src/application/dispatch/respond-to-ride-offer.js";
 import { Driver } from "../../src/domain/driver.js";
 import { Location } from "../../src/domain/shared/location.js";
 import { Ride } from "../../src/domain/ride.js";
