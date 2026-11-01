@@ -1,12 +1,14 @@
 import type { DriverRepository } from "../ports/driver-repository.js";
 import type { RideOfferRepository } from "../ports/ride-offer-repository.js";
 import type { RideRepository } from "../ports/ride-repository.js";
+import { workflowLogger, type WorkflowLogger } from "../ports/workflow-logger.js";
 
 export class ExpireRideOfferService {
     constructor(
         private readonly rideRepository: Pick<RideRepository, "findById" | "save">,
         private readonly driverRepository: Pick<DriverRepository, "findById" | "save">,
-        private readonly rideOfferRepository: Pick<RideOfferRepository, "findById" | "save">
+        private readonly rideOfferRepository: Pick<RideOfferRepository, "findById" | "save">,
+        private readonly logger: WorkflowLogger = workflowLogger
     ) {}
 
     execute(rideId: string, offerId: string, now = new Date()): boolean {
@@ -45,6 +47,13 @@ export class ExpireRideOfferService {
         this.rideOfferRepository.save(offer);
         this.rideRepository.save(ride);
         this.driverRepository.save(driver);
+        this.logger.log("info", "ride.offer.expired", {
+            rideId,
+            driverId: driver.id,
+            offerId,
+            rideStatus: ride.status,
+            driverStatus: driver.status
+        });
 
         return true;
     }

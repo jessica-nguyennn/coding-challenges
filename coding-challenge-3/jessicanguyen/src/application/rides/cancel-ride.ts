@@ -1,12 +1,14 @@
 import type { RideRepository } from "../ports/ride-repository.js";
 import type { DriverRepository } from "../ports/driver-repository.js";
 import type { RideOfferRepository } from "../ports/ride-offer-repository.js";
+import { workflowLogger, type WorkflowLogger } from "../ports/workflow-logger.js";
 
 export class CancelRideService {
     constructor(
         private readonly rideRepository: Pick<RideRepository, "findById" | "save">,
         private readonly driverRepository: Pick<DriverRepository, "findById" | "save">,
-        private readonly rideOfferRepository: Pick<RideOfferRepository, "findByRideId" | "save">
+        private readonly rideOfferRepository: Pick<RideOfferRepository, "findByRideId" | "save">,
+        private readonly logger: WorkflowLogger = workflowLogger
     ) {}
 
     execute(rideId: string): void {
@@ -17,6 +19,7 @@ export class CancelRideService {
         }
 
         if (ride.status === "CANCELLED") {
+            this.logger.log("info", "ride.cancellation.duplicate_ignored", { rideId });
             return;
         }
 
@@ -35,6 +38,10 @@ export class CancelRideService {
         if (ride.status === "REQUESTED" || ride.status === "MATCHING") {
             ride.transitionTo("CANCELLED");
             this.rideRepository.save(ride);
+            this.logger.log("info", "ride.cancelled", {
+                rideId,
+                rideStatus: ride.status
+            });
             return;
         }
 
@@ -82,5 +89,11 @@ export class CancelRideService {
 
         this.driverRepository.save(driver);
         this.rideRepository.save(ride);
+        this.logger.log("info", "ride.cancelled", {
+            rideId,
+            driverId,
+            rideStatus: ride.status,
+            driverStatus: driver.status
+        });
     }
 }

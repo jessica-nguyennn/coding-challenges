@@ -12,13 +12,19 @@ const event: RideCreatedEvent = {
 describe("RideCreatedHandler", () => {
     it("dispatches a ride once when an event is delivered more than once", async () => {
         const dispatchRide = { execute: vi.fn().mockReturnValue(null) };
-        const handler = new RideCreatedHandler(dispatchRide);
+        const logger = { log: vi.fn() };
+        const handler = new RideCreatedHandler(dispatchRide, logger);
 
         await handler.handle(event);
         await handler.handle(event);
 
         expect(dispatchRide.execute).toHaveBeenCalledTimes(1);
         expect(dispatchRide.execute).toHaveBeenCalledWith("R001");
+        expect(logger.log).toHaveBeenCalledWith(
+            "info",
+            "ride.event.duplicate_ignored",
+            expect.objectContaining({ rideId: "R001", eventId: "event-001" })
+        );
     });
 
     it("does not mark an event processed when dispatch fails, allowing retry", async () => {

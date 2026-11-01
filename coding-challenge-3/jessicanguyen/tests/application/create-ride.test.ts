@@ -12,11 +12,13 @@ describe("CreateRideService", () => {
             save: vi.fn()
         };
         const eventBus = { publish: vi.fn() };
+        const logger = { log: vi.fn() };
 
         const service = new CreateRideService(
             passengerRepository,
             rideRepository,
-            eventBus
+            eventBus,
+            logger
         );
 
         const ride = service.execute({
@@ -41,6 +43,20 @@ describe("CreateRideService", () => {
             eventId: ride.id,
             rideId: ride.id
         }));
+        expect(logger.log).toHaveBeenCalledWith(
+            "info",
+            "ride.created",
+            expect.objectContaining({
+                rideId: ride.id,
+                eventId: ride.id,
+                passengerId: "P001"
+            })
+        );
+        expect(logger.log).toHaveBeenCalledWith(
+            "info",
+            "ride.event.published",
+            expect.objectContaining({ rideId: ride.id, eventId: ride.id })
+        );
     });
 
     it("should reject a request from an unknown passenger", () => {

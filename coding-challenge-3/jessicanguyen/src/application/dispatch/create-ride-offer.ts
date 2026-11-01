@@ -7,6 +7,7 @@ import { RideOffer } from "../../domain/ride-offer.js";
 import type { RideRepository } from "../ports/ride-repository.js";
 import type { DriverRepository } from "../ports/driver-repository.js";
 import type { RideOfferRepository } from "../ports/ride-offer-repository.js";
+import { workflowLogger, type WorkflowLogger } from "../ports/workflow-logger.js";
 
 const DEFAULT_RESPONSE_TIMEOUT_MS = 30_000;
 
@@ -34,7 +35,8 @@ export class CreateRideOfferService {
             "findById" | "claimForOffer"
         >,
         private readonly rideOfferRepository: RideOfferRepository,
-        private readonly responseTimeoutMs = DEFAULT_RESPONSE_TIMEOUT_MS
+        private readonly responseTimeoutMs = DEFAULT_RESPONSE_TIMEOUT_MS,
+        private readonly logger: WorkflowLogger = workflowLogger
     ) {
         if (
             !Number.isFinite(responseTimeoutMs) ||
@@ -78,6 +80,10 @@ export class CreateRideOfferService {
         );
 
         if (!this.driverRepository.claimForOffer(driverId)) {
+            this.logger.log("info", "ride.offer.claim_failed", {
+                rideId,
+                driverId
+            });
             throw new DriverNotAvailableError();
         }
 
@@ -86,6 +92,12 @@ export class CreateRideOfferService {
         this.rideRepository.save(ride);
         this.rideOfferRepository.save(offer);
         this.expirationHandler?.(rideId, offer.id, offer.expiresAt);
+        this.logger.log("info", "ride.offer.created", {
+            rideId,
+            driverId,
+            offerId: offer.id,
+            expiresAt: offer.expiresAt.toISOString()
+        });
 
         return offer;
     }

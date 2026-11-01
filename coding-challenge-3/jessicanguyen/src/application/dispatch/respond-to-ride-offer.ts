@@ -3,6 +3,7 @@ import type { DriverRepository } from "../ports/driver-repository.js";
 import type { RideOfferRepository } from "../ports/ride-offer-repository.js";
 import type { ExpireRideOfferService } from "./expire-ride-offer.js";
 import type { RideOffer } from "../../domain/ride-offer.js";
+import { workflowLogger, type WorkflowLogger } from "../ports/workflow-logger.js";
 
 interface RideDispatcher {
     execute(rideId: string): RideOffer | null;
@@ -20,7 +21,8 @@ export class RespondToRideOfferService {
         >,
         private readonly rideOfferRepository: RideOfferRepository,
         private readonly rideDispatcher: RideDispatcher,
-        private readonly expireRideOfferService: ExpireRideOfferService
+        private readonly expireRideOfferService: ExpireRideOfferService,
+        private readonly logger: WorkflowLogger = workflowLogger
     ) {}
 
     accept(rideId: string, offerId: string, driverId: string) {
@@ -52,6 +54,11 @@ export class RespondToRideOfferService {
                 ride.assignedDriverId === driverId &&
                 driver.status === "BUSY"
             ) {
+                this.logger.log("info", "ride.offer.duplicate_acceptance", {
+                    rideId,
+                    driverId,
+                    offerId
+                });
                 return offer;
             }
             throw new Error("Ride offer is no longer pending");
@@ -86,6 +93,13 @@ export class RespondToRideOfferService {
         this.rideOfferRepository.save(offer);
         this.rideRepository.save(ride);
         this.driverRepository.save(driver);
+        this.logger.log("info", "ride.offer.accepted", {
+            rideId,
+            driverId,
+            offerId,
+            rideStatus: ride.status,
+            driverStatus: driver.status
+        });
         return offer;
     }
 
@@ -142,6 +156,13 @@ export class RespondToRideOfferService {
         this.rideOfferRepository.save(offer);
         this.rideRepository.save(ride);
         this.driverRepository.save(driver);
+        this.logger.log("info", "ride.offer.rejected", {
+            rideId,
+            driverId,
+            offerId,
+            rideStatus: ride.status,
+            driverStatus: driver.status
+        });
         this.rideDispatcher.execute(ride.id);
         return offer;
     }
