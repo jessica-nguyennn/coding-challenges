@@ -7,11 +7,21 @@ bus so the workflow can be run locally without external infrastructure.
 
 ## Run the application
 
-From `coding-challenge-3/jessicanguyen`:
+From the repository root, enter the application directory, install dependencies,
+and start the development server:
 
 ```sh
+cd coding-challenge-3/jessicanguyen
 npm install
 npm run dev
+```
+
+For a production-style local run, build first and then start the compiled
+server:
+
+```sh
+npm run build
+npm start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) for the demo dashboard.
@@ -56,8 +66,9 @@ npm test
 npm run build
 ```
 
-Vitest covers domain rules, application services, HTTP routes, the event bus,
-and asynchronous ride dispatch.
+`npm test` runs the Vitest suite. `npm run build` runs the TypeScript compiler
+and verifies the project type-checks. The tests cover domain rules, application
+services, HTTP routes, the event bus, and asynchronous ride dispatch.
 
 ## Architecture
 
@@ -130,6 +141,28 @@ and lets dispatch be retried separately. For production durability, use an
 outbox or transactional messaging strategy so ride persistence and event
 publication cannot silently diverge.
 
+## Observability
+
+The application writes one-line JSON workflow records to stdout (`info`) and
+stderr (`error`). Records include an ISO timestamp, an event name, and available
+correlation fields such as `rideId`, `driverId`, `offerId`, and `eventId`.
+Lifecycle entries cover ride creation, event publication/consumption, dispatch
+start and result, offer creation/acceptance/rejection/expiration, and ride
+cancellation/completion. Consumer retries and dead-letter outcomes include
+the event ID and attempt count.
+
+To investigate a ride, search the application output for its exact `rideId`;
+follow the associated `eventId`, `offerId`, and `driverId` fields across the
+creation, dispatch, and lifecycle records. For example, with JSON logs captured
+in `app.log`:
+
+```sh
+grep '"rideId":"R001"' app.log
+```
+
+Logs are process output only: this demo does not persist, index, or retain them
+centrally, and does not yet include metrics or distributed tracing.
+
 ## Scalability considerations
 
 The demo is intentionally sized for a local challenge. Likely bottlenecks and
@@ -160,4 +193,4 @@ latency but means clients observe eventual consistency.
 - Dead letters are logged and retained in memory, but cannot currently be
   inspected or replayed through an API.
 - The API provides demonstration operations, not production-grade validation,
-  observability, persistence, or rate limiting.
+  centralized observability, persistence, or rate limiting.
