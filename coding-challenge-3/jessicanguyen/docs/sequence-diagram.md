@@ -48,7 +48,8 @@ sequenceDiagram
     Dispatch->>Offers: find previous offers
     Dispatch->>Matcher: match(pickup, excludedDriverIds)
     Matcher->>Drivers: find available drivers
-    Note over Matcher: Filter by location and radius;<br/>sort by distance, then driverId
+    Note over Matcher: Filter by location and radius
+    Note over Matcher: Sort by distance, then driverId
     Matcher-->>Dispatch: nearest candidate or none
 ```
 
@@ -69,8 +70,9 @@ sequenceDiagram
 
     Dispatch->>CreateOffer: execute(rideId, driverId)
     CreateOffer->>Drivers: claimForOffer(driverId)
-    Drivers-->>CreateOffer: claimed; status becomes OFFERED
-    CreateOffer->>Rides: assign driver; transition to DRIVER_ASSIGNED
+    Drivers-->>CreateOffer: claim succeeded
+    Note over CreateOffer: Driver status is now OFFERED
+    CreateOffer->>Rides: assign driver and set DRIVER_ASSIGNED
     CreateOffer->>Offers: save PENDING offer
     CreateOffer-->>Dispatch: pending offer
 ```
@@ -146,7 +148,7 @@ sequenceDiagram
     Driver->>API: POST /rides/R/offers/O1/reject
     API->>Respond: reject(R, O1, D001)
     Respond->>Offers: validate and mark O1 REJECTED
-    Respond->>Rides: transition ride to MATCHING; clear assignment
+    Respond->>Rides: transition ride to MATCHING and clear assignment
     Respond->>Drivers: release D001 to AVAILABLE
     Respond->>Dispatch: execute(R)
     Dispatch->>Dispatch: exclude previously offered D001
@@ -179,13 +181,13 @@ sequenceDiagram
     CreateOffer->>Timer: schedule at expiresAt
     Timer->>Expire: execute(rideId, offerId)
     Expire->>Offers: mark offer EXPIRED
-    Expire->>Rides: transition to MATCHING; clear assignment
+    Expire->>Rides: transition to MATCHING and clear assignment
     Expire->>Drivers: release driver to AVAILABLE
     Expire->>Dispatch: find next driver
 
     Driver->>API: late accept or reject
     API->>Expire: validate deadline
-    Expire-->>API: expire offer; response is rejected
+    Expire-->>API: expire offer and reject response
     API-->>Driver: error
 ```
 
@@ -259,9 +261,11 @@ sequenceDiagram
 
     Note over A,B: Both matched D001 while AVAILABLE
     A->>Drivers: claimForOffer(D001)
-    Drivers-->>A: claimed; status becomes OFFERED
+    Drivers-->>A: claim succeeded
+    Note over A: Driver status becomes OFFERED
     B->>Drivers: claimForOffer(D001)
-    Drivers-->>B: lost; driver is no longer AVAILABLE
+    Drivers-->>B: claim lost
+    Note over B: Driver is no longer AVAILABLE
     Note over A: Continue creating the offer for R1
     Note over B: Exclude D001 and try another candidate
 ```
